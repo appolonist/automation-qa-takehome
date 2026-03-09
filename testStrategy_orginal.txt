@@ -1,0 +1,73 @@
+Scope & Objective: 
+
+*** A new feature allows publishers to:
+
+a) create ad campaigns,
+b) edit and
+c) preview them.
+
+Testing Types & Levels: 
+
+I would follow the pyramid test approach. 
+
+a) tagged unit tests (50-60% coverage) wrapped into regressions packs split into tagged regression tests suits. 
+
+*** WHY ? ***
+
+Unit tests are cheap to implement and maintain,
+they are also fast,
+when feature will change, unit test is quite easy to update.
+
+They are like lego blocks, so its easy to compose them to useful tests suits.
+
+Tagging give advantage to tracking test executions data and they versions ( from regression perspective ) 
+
+Regression pack itself gives higher confidence the new changes didn't broke the old ones.
+
+b) integration tests (20% - 30%)
+
+In a "a)" section I have mentioned the unit tests are composable, so its good to reuse them during integration tests implementation. 
+
+***Why?***
+
+In our case feature would change in the time. Integration tests are more complex then unit tests, so they implementation and maintaining is more time consuming. Thats why I believe we shouldn't invest to much to extend this tests coverage ATM. 
+
+c) e2e tests (10% - 20%):
+
+Quite few to check the most important users flows, as they are the most complex and time consuming in implementation but also maintaining them when features would be changing in a time.
+
+d) API testing it should be a part of each previous sections when necessary.
+
+e) API endpoints health check test. - fast feedback about API endpoints availability.
+
+
+Test Environment & Tools: 
+
+Test environment would be implemented in Typescript and supported by playwright ecosystem ( framework + tools )
+
+
+CI/CD Integration:
+
+When developer push code to a specific sandbox branch ( CI process ), the expected tests should be automatically kicked off and the results should be visible in PR. In the case the tests haven't passed the developers shouldn't be able to merge it to a main. 
+
+When the change would pass expected tests during CI process, and has been successfully merged to sandbox main. The team may decide to push this change up to higher env (eg. test, UAT). What should also kick off the expected automated tests and block change merge in the case any test would fail. Process should repeat until change will be successful deployed to production env.
+
+
+The all available automation tests execution against each env should be kicked off each night at eg. 2-3 am when the users don't use our tool and reports related to them should be delivered to expected locations.
+
+The whole described process will be supported by github and github actions workflow. 
+
+
+Coverage vs Speed:
+
+Not each automation test execution should execute all available tests, what is time consuming and produce unnecessary data what makes confusion and additional effort to understand what it actually means. 
+
+The tagging tests strategy gives ability to compose tests into packs that are "adjusted" to specific test needs and may be easy upgraded if associated feature will change in the meantime.
+
+Another approach which may increase automation test speed is to failing fast. Before run the test suit execution which cover whole module regression and takes 1h, its good to run fast smoke test against this module and if its positive then run complex one. 
+
+Playwright gives us tools which during implementation allow us to check if tests are flaky, also supports waiting actions what makes test execution faster. 
+
+From the other hand it supports caching and sharding, what improves execution time too. 
+
+Coverage is a need what we should't resign when we will struggling with execution test timing issue. In the other hand I believe we should rethink how our automation test architecture looks like and use the approaches and available tools I described above in a more effective manner. 
