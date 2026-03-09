@@ -18,14 +18,6 @@ const basePayload = (): CreateCampaignPayload => ({
   currency: "GBP",
 });
 
-/**
- * Story 1: Create Basic Campaign
- *
- * Each AC block follows the pattern:
- *   ✅ Happy path  — valid data, expect 201
- *   ❌ Error/validation — invalid data, expect 4xx
- *   🔲 Edge case   — boundary value from the data recommendations
- */
 test.describe("Story 1: Create Basic Campaign @mocked_api", () => {
 
   test.describe("Campaign must have a name (3-100 chars)", () => {

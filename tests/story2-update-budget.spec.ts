@@ -16,14 +16,6 @@ const seedCampaign = (overrides: Partial<Campaign> = {}): Campaign => ({
   ...overrides,
 });
 
-/**
- * Story 2: Update Campaign Budget
- *
- * Each AC block:
- *   ✅ Happy path  — valid update, expect 200
- *   ❌ Error/validation — violates business rule, expect 4xx
- *   🔲 Edge case   — boundary value from the data recommendations
- */
 test.describe("Story 2: Update Campaign Budget @mocked_api", () => {
 
   test.describe("Can increase budget at any time", () => {

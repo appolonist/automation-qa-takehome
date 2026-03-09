@@ -16,14 +16,6 @@ const makeCampaign = (id: string, status: Campaign["status"], overrides: Partial
   ...overrides,
 });
 
-/**
- * Story 4: Delete Draft Campaign
- *
- * Each AC block:
- *   ✅ Happy path  — valid deletion, expect 204
- *   ❌ Error/validation — invalid target, expect 4xx
- *   🔲 Edge case   — boundary / side-effect verification
- */
 test.describe("Story 4: Delete Draft Campaign @mocked_api", () => {
 
   test.describe("Can delete campaigns in 'draft' status only", () => {
