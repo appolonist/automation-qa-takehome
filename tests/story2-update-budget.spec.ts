@@ -24,7 +24,7 @@ const seedCampaign = (overrides: Partial<Campaign> = {}): Campaign => ({
  *   ❌ Error/validation — violates business rule, expect 4xx
  *   🔲 Edge case   — boundary value from the data recommendations
  */
-test.describe("Story 2: Update Campaign Budget", () => {
+test.describe("Story 2: Update Campaign Budget @mocked_api", () => {
 
   // ─────────────────────────────────────────────
   // AC: Can increase budget at any time

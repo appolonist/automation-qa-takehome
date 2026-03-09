@@ -26,7 +26,7 @@ const basePayload = (): CreateCampaignPayload => ({
  *   ❌ Error/validation — invalid data, expect 4xx
  *   🔲 Edge case   — boundary value from the data recommendations
  */
-test.describe("Story 1: Create Basic Campaign", () => {
+test.describe("Story 1: Create Basic Campaign @mocked_api", () => {
 
   // ─────────────────────────────────────────────
   // AC: Campaign must have a name (3–100 chars)
