@@ -75,6 +75,8 @@ export class MockCampaignApiClient {
     if (this.overrides.update) return this.overrides.update(id, payload);
     const c = this.campaigns.get(id);
     if (!c) return fail(404, { error: "Campaign not found" });
+    if (payload.budget !== undefined && payload.budget === 0)
+      return fail(400, { error: "budget must be greater than zero" });
     if (payload.budget !== undefined && payload.budget <= c.spend)
       return fail(422, { error: "Cannot reduce budget below current spend" });
 
