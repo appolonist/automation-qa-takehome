@@ -40,10 +40,15 @@ export class MockCampaignApiClient {
 
     if (!payload.name || payload.name.length < 3)
       return fail(400, { error: "name must be at least 3 characters" });
+    if (new Date(payload.start_date) < new Date(new Date().toISOString().split('T')[0]))
+      return fail(400, { error: "start_date must be today or in the future" });
     if (new Date(payload.end_date) <= new Date(payload.start_date))
       return fail(422, { error: "end_date must be after start_date" });
     if (payload.budget < 0.01 || payload.budget > 1_000_000)
       return fail(400, { error: "budget out of range" });
+    const supportedCurrencies = ["GBP", "USD", "EUR"];
+    if (!supportedCurrencies.includes(payload.currency))
+      return fail(400, { error: "unsupported currency code" });
 
     const campaign: Campaign = {
       id: newId("camp"),
