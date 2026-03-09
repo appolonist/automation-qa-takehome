@@ -1,0 +1,14 @@
+{
+  "name": "automation-qa-takehome",
+  "version": "1.0.0",
+  "description": "**Time allocation:** 2-3 hours  \r **Submission deadline:** maximum 5 days from receipt  \r **What to submit:** GitHub repository link (public or give us access)",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.3.5"
+  }
+}
