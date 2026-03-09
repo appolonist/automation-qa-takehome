@@ -3,7 +3,16 @@
   "version": "1.0.0",
   "description": "**Time allocation:** 2-3 hours  \r **Submission deadline:** maximum 5 days from receipt  \r **What to submit:** GitHub repository link (public or give us access)",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test tests/api",
+    "test:ui": "playwright test tests/ui",
+    "test:integration": "playwright test tests/api/create-campaign.integration.spec.ts",
+    "test:story1": "playwright test tests/api/create-campaign.api.spec.ts tests/ui/create-campaign.ui.spec.ts",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
