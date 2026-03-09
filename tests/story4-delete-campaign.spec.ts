@@ -26,156 +26,241 @@ const makeCampaign = (id: string, status: Campaign["status"], overrides: Partial
  */
 test.describe("Story 4: Delete Draft Campaign @mocked_api", () => {
 
-  // ─────────────────────────────────────────────
-  // AC: Can delete campaigns in 'draft' status only
-  // ─────────────────────────────────────────────
+  test.describe("Can delete campaigns in 'draft' status only", () => {
+    test("successfully deletes a draft campaign (204) @successful", async ({ mockCampaignApi }) => {
+      const expectedStatus = 204;
+      const campaignId = "camp_draft";
+      const campaignStatus = "draft";
 
-  test("✅ [happy path] successfully deletes a draft campaign (204)", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([makeCampaign("camp_draft", "draft")]);
+      // Arrange
+      mockCampaignApi.seed([makeCampaign(campaignId, campaignStatus)]);
 
-    const res = await mockCampaignApi.delete("camp_draft");
+      // Act
+      const res = await mockCampaignApi.delete(campaignId);
 
-    expect(res.status).toBe(204);
-    expect(res.ok).toBe(true);
-  });
-
-  test("❌ [error] rejects deletion of an active campaign (422)", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([makeCampaign("camp_active", "active")]);
-
-    const res = await mockCampaignApi.delete("camp_active");
-
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(422);
-  });
-
-  test("🔲 [edge case] active campaign data is unchanged after failed deletion attempt", async ({ mockCampaignApi }) => {
-    // Ensures the operation has no side effects when rejected
-    mockCampaignApi.seed([makeCampaign("camp_active_safe", "active")]);
-
-    await mockCampaignApi.delete("camp_active_safe"); // should fail
-
-    const fetchRes = await mockCampaignApi.getById("camp_active_safe");
-    expect(fetchRes.status).toBe(200);
-    expect(fetchRes.data.status).toBe("active");
-    expect(fetchRes.data.budget).toBe(10000);
-  });
-
-  // ─────────────────────────────────────────────
-  // AC: Cannot delete active or completed campaigns
-  // ─────────────────────────────────────────────
-
-  test("✅ [happy path] draft campaign is removed from the campaign list after deletion", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([
-      makeCampaign("camp_keep", "active"),
-      makeCampaign("camp_remove", "draft"),
-    ]);
-
-    await mockCampaignApi.delete("camp_remove");
-
-    const listRes = await mockCampaignApi.list();
-    const ids = listRes.data.campaigns.map((c) => c.id);
-    expect(ids).not.toContain("camp_remove");
-    expect(ids).toContain("camp_keep");
-  });
-
-  test("❌ [error] rejects deletion of a completed campaign (422)", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([makeCampaign("camp_completed", "completed")]);
-
-    const res = await mockCampaignApi.delete("camp_completed");
-
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(422);
-  });
-
-  test("🔲 [edge case] rejects deletion of a paused campaign (422) — paused is not draft", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([makeCampaign("camp_paused", "paused")]);
-
-    const res = await mockCampaignApi.delete("camp_paused");
-
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(422);
-  });
-
-  // ─────────────────────────────────────────────
-  // AC: Deletion is permanent (no soft delete)
-  // ─────────────────────────────────────────────
-
-  test("✅ [happy path] deleted campaign cannot be retrieved by ID (404)", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([makeCampaign("camp_gone", "draft")]);
-
-    await mockCampaignApi.delete("camp_gone");
-    const res = await mockCampaignApi.getById("camp_gone");
-
-    expect(res.status).toBe(404);
-  });
-
-  test("❌ [error] returns 404 when deleting a non-existent campaign", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.delete("camp_ghost");
-
-    expect(res.status).toBe(404);
-    expect(res.ok).toBe(false);
-  });
-
-  test("🔲 [edge case] deleted campaign does not reappear when a new campaign is created with the same name", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([makeCampaign("camp_original", "draft", { name: "Duplicate Name" })]);
-
-    await mockCampaignApi.delete("camp_original");
-
-    // Create a new campaign with the same name — should succeed and get a new ID
-    const createRes = await mockCampaignApi.create({
-      name: "Duplicate Name",
-      start_date: new Date().toISOString(),
-      end_date: new Date(Date.now() + 86400000 * 30).toISOString(),
-      budget: 5000,
-      currency: "GBP",
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      expect(res.ok).toBe(true);
     });
 
-    expect(createRes.status).toBe(201);
-    expect(createRes.data.id).not.toBe("camp_original");
+    test("rejects deletion of an active campaign (422) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 422;
+      const campaignId = "camp_active";
+      const campaignStatus = "active";
 
-    const listRes = await mockCampaignApi.list();
-    expect(listRes.data.campaigns).toHaveLength(1);
-    expect(listRes.data.campaigns[0].id).toBe(createRes.data.id);
+      // Arrange
+      mockCampaignApi.seed([makeCampaign(campaignId, campaignStatus)]);
+
+      // Act
+      const res = await mockCampaignApi.delete(campaignId);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("active campaign data is unchanged after failed deletion attempt @edge_case", async ({ mockCampaignApi }) => {
+      const expectedGetStatus = 200;
+      const expectedCampaignStatus = "active";
+      const expectedBudget = 10000;
+      const campaignId = "camp_active_safe";
+      const campaignStatus = "active";
+
+      // Arrange
+      // Ensures the operation has no side effects when rejected
+      mockCampaignApi.seed([makeCampaign(campaignId, campaignStatus)]);
+
+      // Act
+      await mockCampaignApi.delete(campaignId); // should fail
+      const fetchRes = await mockCampaignApi.getById(campaignId);
+
+      // Assert
+      expect(fetchRes.status).toBe(expectedGetStatus);
+      expect(fetchRes.data.status).toBe(expectedCampaignStatus);
+      expect(fetchRes.data.budget).toBe(expectedBudget);
+    });
   });
 
-  // ─────────────────────────────────────────────
-  // AC: Returns appropriate error for invalid deletions
-  // ─────────────────────────────────────────────
+  test.describe("Cannot delete active or completed campaigns", () => {
+    test("draft campaign is removed from the campaign list after deletion @successful", async ({ mockCampaignApi }) => {
+      const expectedGetStatus = 200;
+      const keepCampaignId = "camp_keep";
+      const removeCampaignId = "camp_remove";
+      const keepStatus = "active";
+      const removeStatus = "draft";
 
-  test("✅ [happy path] can delete multiple draft campaigns sequentially — list count reduces correctly", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([
-      makeCampaign("camp_d1", "draft"),
-      makeCampaign("camp_d2", "draft"),
-      makeCampaign("camp_d3", "draft"),
-    ]);
+      // Arrange
+      mockCampaignApi.seed([
+        makeCampaign(keepCampaignId, keepStatus),
+        makeCampaign(removeCampaignId, removeStatus),
+      ]);
 
-    await mockCampaignApi.delete("camp_d1");
-    await mockCampaignApi.delete("camp_d2");
+      // Act
+      await mockCampaignApi.delete(removeCampaignId);
+      const listRes = await mockCampaignApi.list();
+      const ids = listRes.data.campaigns.map((c) => c.id);
 
-    const listRes = await mockCampaignApi.list();
-    expect(listRes.data.campaigns).toHaveLength(1);
-    expect(listRes.data.campaigns[0].id).toBe("camp_d3");
+      // Assert
+      expect(ids).not.toContain(removeCampaignId);
+      expect(ids).toContain(keepCampaignId);
+    });
+
+    test("rejects deletion of a completed campaign (422) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 422;
+      const campaignId = "camp_completed";
+      const campaignStatus = "completed";
+
+      // Arrange
+      mockCampaignApi.seed([makeCampaign(campaignId, campaignStatus)]);
+
+      // Act
+      const res = await mockCampaignApi.delete(campaignId);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("rejects deletion of a paused campaign (422) — paused is not draft @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 422;
+      const campaignId = "camp_paused";
+      const campaignStatus = "paused";
+
+      // Arrange
+      mockCampaignApi.seed([makeCampaign(campaignId, campaignStatus)]);
+
+      // Act
+      const res = await mockCampaignApi.delete(campaignId);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
   });
 
-  test("❌ [error] second deletion of the same campaign returns 404", async ({ mockCampaignApi }) => {
-    mockCampaignApi.seed([makeCampaign("camp_once", "draft")]);
+  test.describe("Deletion is permanent (no soft delete)", () => {
+    test("deleted campaign cannot be retrieved by ID (404) @successful", async ({ mockCampaignApi }) => {
+      const expectedDeleteStatus = 204;
+      const expectedGetStatus = 404;
+      const campaignId = "camp_gone";
+      const campaignStatus = "draft";
 
-    await mockCampaignApi.delete("camp_once");        // first: 204
-    const res = await mockCampaignApi.delete("camp_once"); // second: should 404
+      // Arrange
+      mockCampaignApi.seed([makeCampaign(campaignId, campaignStatus)]);
 
-    expect(res.status).toBe(404);
+      // Act
+      await mockCampaignApi.delete(campaignId);
+      const res = await mockCampaignApi.getById(campaignId);
+
+      // Assert
+      expect(res.status).toBe(expectedGetStatus);
+    });
+
+    test("returns 404 when deleting a non-existent campaign @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 404;
+      const nonExistentId = "camp_ghost";
+
+      // Act
+      const res = await mockCampaignApi.delete(nonExistentId);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      expect(res.ok).toBe(false);
+    });
+
+    test("deleted campaign does not reappear when a new campaign is created with the same name @edge_case", async ({ mockCampaignApi }) => {
+      const expectedCreateStatus = 201;
+      const expectedListLength = 1;
+      const originalCampaignId = "camp_original";
+      const duplicateName = "Duplicate Name";
+      const campaignStatus = "draft";
+
+      // Arrange
+      mockCampaignApi.seed([makeCampaign(originalCampaignId, campaignStatus, { name: duplicateName })]);
+
+      // Act
+      await mockCampaignApi.delete(originalCampaignId);
+
+      // Create a new campaign with the same name — should succeed and get a new ID
+      const createRes = await mockCampaignApi.create({
+        name: duplicateName,
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 86400000 * 30).toISOString(),
+        budget: 5000,
+        currency: "GBP",
+      });
+
+      const listRes = await mockCampaignApi.list();
+
+      // Assert
+      expect(createRes.status).toBe(expectedCreateStatus);
+      expect(createRes.data.id).not.toBe(originalCampaignId);
+      expect(listRes.data.campaigns).toHaveLength(expectedListLength);
+      expect(listRes.data.campaigns[0].id).toBe(createRes.data.id);
+    });
   });
 
-  test("🔲 [edge case] invalid country codes in target audience do not affect draft deletion", async ({ mockCampaignApi }) => {
-    // Deletion rules are status-based only; malformed audience data is irrelevant
-    mockCampaignApi.seed([
-      makeCampaign("camp_bad_audience", "draft", {
-        target_audience: { countries: ["XX", "ZZ", "INVALID"] },
-      }),
-    ]);
+  test.describe("Returns appropriate error for invalid deletions", () => {
+    test("can delete multiple draft campaigns sequentially — list count reduces correctly @successful", async ({ mockCampaignApi }) => {
+      const expectedListLength = 1;
+      const campaignsToDelete = ["camp_d1", "camp_d2"];
+      const campaignToKeep = "camp_d3";
+      const campaignStatus = "draft";
 
-    const res = await mockCampaignApi.delete("camp_bad_audience");
+      // Arrange
+      mockCampaignApi.seed([
+        makeCampaign(campaignsToDelete[0], campaignStatus),
+        makeCampaign(campaignsToDelete[1], campaignStatus),
+        makeCampaign(campaignToKeep, campaignStatus),
+      ]);
 
-    expect(res.status).toBe(204);
+      // Act
+      for (const campaignId of campaignsToDelete) {
+        await mockCampaignApi.delete(campaignId);
+      }
+      const listRes = await mockCampaignApi.list();
+
+      // Assert
+      expect(listRes.data.campaigns).toHaveLength(expectedListLength);
+      expect(listRes.data.campaigns[0].id).toBe(campaignToKeep);
+    });
+
+    test("second deletion of the same campaign returns 404 @negative", async ({ mockCampaignApi }) => {
+      const expectedFirstStatus = 204;
+      const expectedSecondStatus = 404;
+      const campaignId = "camp_once";
+      const campaignStatus = "draft";
+
+      // Arrange
+      mockCampaignApi.seed([makeCampaign(campaignId, campaignStatus)]);
+
+      // Act
+      await mockCampaignApi.delete(campaignId);        // first: 204
+      const res = await mockCampaignApi.delete(campaignId); // second: should 404
+
+      // Assert
+      expect(res.status).toBe(expectedSecondStatus);
+    });
+
+    test("invalid country codes in target audience do not affect draft deletion @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 204;
+      const campaignId = "camp_bad_audience";
+      const campaignStatus = "draft";
+      const invalidCountries = ["XX", "ZZ", "INVALID"];
+
+      // Arrange
+      // Deletion rules are status-based only; malformed audience data is irrelevant
+      mockCampaignApi.seed([
+        makeCampaign(campaignId, campaignStatus, {
+          target_audience: { countries: invalidCountries },
+        }),
+      ]);
+
+      // Act
+      const res = await mockCampaignApi.delete(campaignId);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+    });
   });
 });

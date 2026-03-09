@@ -28,188 +28,334 @@ const basePayload = (): CreateCampaignPayload => ({
  */
 test.describe("Story 1: Create Basic Campaign @mocked_api", () => {
 
-  // ─────────────────────────────────────────────
-  // AC: Campaign must have a name (3–100 chars)
-  // ─────────────────────────────────────────────
+  test.describe("Campaign must have a name (3-100 chars)", () => {
+    test("creates campaign with valid name and required fields @successful", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const expectedName = "Summer Sale 2026";
 
-  test("✅ [happy path] creates campaign with valid name and required fields", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create(basePayload());
+      // Arrange
+      const payload = basePayload();
 
-    expect(res.status).toBe(201);
-    expect(res.ok).toBe(true);
-    expect(res.data.name).toBe("Summer Sale 2026");
-  });
+      // Act
+      const res = await mockCampaignApi.create(payload);
 
-  test("❌ [error] rejects campaign with empty name (400)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), name: "" });
-
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(400);
-  });
-
-  test("🔲 [edge case] accepts campaign name with exactly 100 characters", async ({ mockCampaignApi }) => {
-    const name = "A".repeat(100);
-    const res = await mockCampaignApi.create({ ...basePayload(), name });
-
-    expect(res.status).toBe(201);
-    expect(res.data.name).toHaveLength(100);
-  });
-
-  // ─────────────────────────────────────────────
-  // AC: Budget must be positive
-  // ─────────────────────────────────────────────
-
-  test("✅ [happy path] creates campaign with standard budget", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), budget: 10000 });
-
-    expect(res.status).toBe(201);
-    expect(res.data.budget).toBe(10000);
-  });
-
-  test("❌ [error] rejects campaign with zero budget (400)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), budget: 0 });
-
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(400);
-  });
-
-  test("🔲 [edge case] accepts campaign with minimum allowed budget (£0.01)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), budget: 0.01 });
-
-    expect(res.status).toBe(201);
-    expect(res.data.budget).toBe(0.01);
-  });
-
-  test("🔲 [edge case] accepts campaign with maximum allowed budget (£1,000,000)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), budget: 1_000_000 });
-
-    expect(res.status).toBe(201);
-    expect(res.data.budget).toBe(1_000_000);
-  });
-
-  // ─────────────────────────────────────────────
-  // AC: Start date must be today or in the future
-  // ─────────────────────────────────────────────
-
-  test("✅ [happy path] accepts start_date set to today", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), start_date: daysFromNow(0) });
-
-    expect(res.status).toBe(201);
-  });
-
-  test("❌ [error] rejects start_date in the past (400)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), start_date: yesterday() });
-
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(400);
-  });
-
-  test("🔲 [edge case] accepts start_date set to tomorrow (boundary of future)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({
-      ...basePayload(),
-      start_date: daysFromNow(1),
-      end_date: daysFromNow(31),
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      expect(res.ok).toBe(true);
+      expect(res.data.name).toBe(expectedName);
     });
 
-    expect(res.status).toBe(201);
-  });
+    test("rejects campaign with empty name (400) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 400;
+      const emptyName = "";
 
-  // ─────────────────────────────────────────────
-  // AC: End date must be after start date
-  // ─────────────────────────────────────────────
+      // Arrange
+      const payload = { ...basePayload(), name: emptyName };
 
-  test("✅ [happy path] accepts end_date 30 days after start_date", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({
-      ...basePayload(),
-      start_date: daysFromNow(5),
-      end_date: daysFromNow(35),
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
     });
 
-    expect(res.status).toBe(201);
+    test("accepts campaign name with exactly 100 characters @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const expectedLength = 100;
+      const name = "A".repeat(expectedLength);
+
+      // Arrange
+      const payload = { ...basePayload(), name };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      expect(res.data.name).toHaveLength(expectedLength);
+    });
   });
 
-  test("❌ [error] rejects end_date before start_date (422)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({
-      ...basePayload(),
-      start_date: daysFromNow(10),
-      end_date: daysFromNow(5),
+  test.describe("Budget must be positive", () => {
+    test("creates campaign with standard budget @successful", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const expectedBudget = 10000;
+
+      // Arrange
+      const payload = { ...basePayload(), budget: expectedBudget };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      expect(res.data.budget).toBe(expectedBudget);
     });
 
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(422);
-  });
+    test("rejects campaign with zero budget (400) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 400;
+      const invalidBudget = 0;
 
-  test("🔲 [edge case] accepts a 24-hour campaign (start_date equals end_date date, different times)", async ({ mockCampaignApi }) => {
-    // Start at 00:00, end at 23:59:59 of the same day — a valid single-day campaign
-    const startDate = daysFromNow(5).replace("T00:00:00Z", "T00:00:00Z");
-    const endDate = daysFromNow(5).replace("T00:00:00Z", "T23:59:59Z");
-    const res = await mockCampaignApi.create({
-      ...basePayload(),
-      start_date: startDate,
-      end_date: endDate,
+      // Arrange
+      const payload = { ...basePayload(), budget: invalidBudget };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
     });
 
-    expect(res.status).toBe(201);
-  });
+    test("accepts campaign with minimum allowed budget (£0.01) @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const expectedBudget = 0.01;
 
-  // ─────────────────────────────────────────────
-  // AC: Currency must be supported
-  // ─────────────────────────────────────────────
+      // Arrange
+      const payload = { ...basePayload(), budget: expectedBudget };
 
-  test("✅ [happy path] creates campaign with each supported currency", async ({ mockCampaignApi }) => {
-    for (const currency of ["GBP", "USD", "EUR"] as const) {
-      const res = await mockCampaignApi.create({ ...basePayload(), currency });
-      expect(res.status).toBe(201);
-      expect(res.data.currency).toBe(currency);
-    }
-  });
+      // Act
+      const res = await mockCampaignApi.create(payload);
 
-  test("❌ [error] rejects unsupported currency code (400)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({
-      ...basePayload(),
-      currency: "JPY" as any,
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      expect(res.data.budget).toBe(expectedBudget);
     });
 
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(400);
+    test("accepts campaign with maximum allowed budget (£1,000,000) @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const expectedBudget = 1_000_000;
+
+      // Arrange
+      const payload = { ...basePayload(), budget: expectedBudget };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      expect(res.data.budget).toBe(expectedBudget);
+    });
+
+    test("rejects negative budget (400) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 400;
+      const negativeBudget = -500;
+
+      // Arrange
+      const payload = { ...basePayload(), budget: negativeBudget };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
   });
 
-  test("🔲 [edge case] creates campaign with empty optional description", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), description: "" });
+  test.describe("Start date must be today or in the future", () => {
+    test("accepts start_date set to today @successful", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
 
-    expect(res.status).toBe(201);
-    // description is optional — absence or empty string both valid
-    expect(res.data.id).toBeDefined();
+      // Arrange
+      const payload = { ...basePayload(), start_date: daysFromNow(0) };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("rejects start_date in the past (400) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 400;
+
+      // Arrange
+      const payload = { ...basePayload(), start_date: yesterday() };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("accepts start_date set to tomorrow (boundary of future) @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+
+      // Arrange
+      const payload = {
+        ...basePayload(),
+        start_date: daysFromNow(1),
+        end_date: daysFromNow(31),
+      };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+    });
   });
 
-  // ─────────────────────────────────────────────
-  // AC: Campaign is created in 'draft' status by default
-  // AC: System returns campaign ID upon successful creation
-  // ─────────────────────────────────────────────
+  test.describe("End date must be after start date", () => {
+    test("accepts end_date 30 days after start_date @successful", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
 
-  test("✅ [happy path] new campaign defaults to draft with spend of 0", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create(basePayload());
+      // Arrange
+      const payload = {
+        ...basePayload(),
+        start_date: daysFromNow(5),
+        end_date: daysFromNow(35),
+      };
 
-    expect(res.data.status).toBe("draft");
-    expect(res.data.spend).toBe(0);
-    expect(res.data.id).toMatch(/^camp_/);
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("rejects end_date before start_date (422) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 422;
+
+      // Arrange
+      const payload = {
+        ...basePayload(),
+        start_date: daysFromNow(10),
+        end_date: daysFromNow(5),
+      };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("accepts a 24-hour campaign (start_date equals end_date date, different times) @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+
+      // Arrange
+      const startDate = daysFromNow(5).replace("T00:00:00Z", "T00:00:00Z");
+      const endDate = daysFromNow(5).replace("T00:00:00Z", "T23:59:59Z");
+      const payload = {
+        ...basePayload(),
+        start_date: startDate,
+        end_date: endDate,
+      };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+    });
   });
 
-  test("❌ [error] rejects negative budget (400)", async ({ mockCampaignApi }) => {
-    const res = await mockCampaignApi.create({ ...basePayload(), budget: -500 });
+  test.describe("Currency must be supported", () => {
+    test("creates campaign with each supported currency @successful", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const supportedCurrencies = ["GBP", "USD", "EUR"] as const;
 
-    expect(res.ok).toBe(false);
-    expect(res.status).toBe(400);
+      // Arrange & Act & Assert
+      for (const currency of supportedCurrencies) {
+        const payload = { ...basePayload(), currency };
+        const res = await mockCampaignApi.create(payload);
+        expect(res.status).toBe(expectedStatus);
+        expect(res.data.currency).toBe(currency);
+      }
+    });
+
+    test("rejects unsupported currency code (400) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 400;
+      const unsupportedCurrency = "JPY";
+
+      // Arrange
+      const payload = {
+        ...basePayload(),
+        currency: unsupportedCurrency as any,
+      };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("creates campaign with empty optional description @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const emptyDescription = "";
+
+      // Arrange
+      const payload = { ...basePayload(), description: emptyDescription };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.status).toBe(expectedStatus);
+      // description is optional — absence or empty string both valid
+      expect(res.data.id).toBeDefined();
+    });
   });
 
-  test("🔲 [edge case] each campaign created receives a unique ID", async ({ mockCampaignApi }) => {
-    const [r1, r2, r3] = await Promise.all([
-      mockCampaignApi.create(basePayload()),
-      mockCampaignApi.create({ ...basePayload(), name: "Campaign Two" }),
-      mockCampaignApi.create({ ...basePayload(), name: "Campaign Three" }),
-    ]);
-    const ids = [r1.data.id, r2.data.id, r3.data.id];
+  test.describe("Campaign is created in 'draft' status by default + System returns campaign ID upon successful creation", () => {
+    test("new campaign defaults to draft with spend of 0 @successful", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const expectedDraftStatus = "draft";
+      const expectedSpend = 0;
+      const expectedIdPattern = /^camp_/;
 
-    expect(new Set(ids).size).toBe(3);
+      // Arrange
+      const payload = basePayload();
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.data.status).toBe(expectedDraftStatus);
+      expect(res.data.spend).toBe(expectedSpend);
+      expect(res.data.id).toMatch(expectedIdPattern);
+    });
+
+    test("rejects negative budget (400) @negative", async ({ mockCampaignApi }) => {
+      const expectedStatus = 400;
+      const negativeBudget = -500;
+
+      // Arrange
+      const payload = { ...basePayload(), budget: negativeBudget };
+
+      // Act
+      const res = await mockCampaignApi.create(payload);
+
+      // Assert
+      expect(res.ok).toBe(false);
+      expect(res.status).toBe(expectedStatus);
+    });
+
+    test("each campaign created receives a unique ID @edge_case", async ({ mockCampaignApi }) => {
+      const expectedStatus = 201;
+      const expectedUniqueCount = 3;
+
+      // Arrange
+      const payloads = [
+        basePayload(),
+        { ...basePayload(), name: "Campaign Two" },
+        { ...basePayload(), name: "Campaign Three" },
+      ];
+
+      // Act
+      const [r1, r2, r3] = await Promise.all(payloads.map(p => mockCampaignApi.create(p)));
+      const ids = [r1.data.id, r2.data.id, r3.data.id];
+
+      // Assert
+      expect(new Set(ids).size).toBe(expectedUniqueCount);
+    });
   });
 });
