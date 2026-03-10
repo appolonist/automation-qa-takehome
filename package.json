@@ -5,13 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
-    "test:api": "playwright test tests/api",
-    "test:ui": "playwright test tests/ui",
-    "test:integration": "playwright test tests/api/create-campaign.integration.spec.ts",
-    "test:story1": "playwright test tests/api/create-campaign.api.spec.ts tests/ui/create-campaign.ui.spec.ts",
+    "test:story1": "playwright test tests/story1-create-campaign.spec.ts",
+    "test:story2": "playwright test tests/story2-update-budget.spec.ts",
+    "test:story4": "playwright test tests/story4-delete-campaign.spec.ts",
     "test:debug": "playwright test --debug",
     "test:headed": "playwright test --headed",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "test:ui": "playwright test --ui"
   },
   "keywords": [],
   "author": "",
