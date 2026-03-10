@@ -39,5 +39,6 @@
 ## Next Steps
 
 - Refactor tests and move test data to separate file(s)
+- Add Authorization support for mockCampaignApiClient
 - Split `types.ts` file into multiple files and implement necessary models and factories
 - Move to UI tests implementation
